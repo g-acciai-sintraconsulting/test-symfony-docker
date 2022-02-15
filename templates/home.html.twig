@@ -1,0 +1,118 @@
+{% extends 'base.html.twig' %}
+
+{% block stylesheets %}
+    <link rel="Stylesheet" href="{{asset('css/home.css')}}" />
+{% endblock %}
+
+{% block javascripts %}
+    <script>
+        function runRequest(requestData, resultPanelSelector) {
+            //alert(`${requestData.method} ${requestData.endpoint}`);
+
+            let requestUrl = requestData.endpoint;
+
+            const requestInit = {
+                method: requestData.method
+            };
+
+            if (requestData.method === "GET") {
+                const queryString = Object.keys(requestData.parameters).map(x => `${x}=${Reflect.get(requestData.parameters, x)}`).join("&");
+                requestUrl += `?${queryString}`;
+            }
+            else if (requestData.method === "POST") {
+                requestInit.body = JSON.stringify(requestData.parameters);
+            }
+            else {
+                throw new Error("method not implemented");
+            }
+
+            const request = new Request(requestUrl, requestInit);
+
+            const resultPanel =  resultPanelSelector.querySelector('.block-results');
+            resultPanel.innerHTML = "";
+            resultPanel.style.display = "block";
+
+            fetch(request)
+                .then(response => response.text())
+                .then(text => {
+                    resultPanel.innerText = text;
+                });
+        }
+    </script>
+{% endblock %}
+
+{% block body %}
+    <div class="container">
+    {% set counter = 1 %}
+    {% for funcName, funcInfo in functions %}
+
+        <div class="endpoint-block">
+
+            <div class="block-header">
+                    <div class="method">{{funcInfo.method}}</div>
+                    <div class="title">{{funcName}}</div>
+                    <div class="endpoint mono-text">{{funcInfo.endpoint}}</div>
+                </div>
+
+            <div class="left-column">
+                {% if funcInfo.method == 'GET' %}
+                    <div class="parameters">
+                        <div class="text-header">parameters</div>             
+                        {% for paramName, paramInfo in funcInfo.parameters %}
+                        <div>
+                            <span class="mono-text">{{paramName}}</span>&nbsp;<input name="req{{counter}}_{{paramName}}" value="{{paramInfo}}"/>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% elseif funcInfo.method == 'POST' %}
+                    <div class="body">
+                        <div class="text-header">body</div>
+                        <textarea name="req{{counter}}_body" class="mono-text">{
+{% for paramName, paramInfo in funcInfo.parameters %}
+    "{{paramName}}": {{paramInfo}},
+{% endfor %}
+}</textarea>
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="right-column">
+                <script>
+                    function buildRequestData() {
+                        let requestParams{{counter}};
+                        {% if funcInfo.method == 'GET' %}
+
+                        {% elseif funcInfo.method == 'POST' %}
+                            requestParams{{counter}} = JSON.parse(document.querySelector("textarea[name=req{{counter}}_body]").value);
+                        {% endif %}
+
+                        return {
+                            method: '{{funcInfo.method}}',
+                            endpoint: '{{funcInfo.endpoint}}',
+                            parameters: requestParams{{counter}}
+                        }
+                    }
+                
+                    const requestParams{{counter}} = {
+                        {% for paramName, paramInfo in funcInfo.parameters %}
+                            {{paramName}}: '{{paramInfo}}',
+                        {% endfor %}
+                    };
+
+                    const requestData{{counter}} = {
+                        method: '{{funcInfo.method}}',
+                        endpoint: '{{funcInfo.endpoint}}',
+                        parameters: requestParams{{counter}}
+                    };
+                </script>
+                <button onclick="runRequest(requestData{{counter}}, event.currentTarget.parentElement.parentElement)">Try It!</button>
+            </div>
+
+            <div class="block-results">
+
+            </div>
+        </div>
+        {% set counter = counter + 1 %}
+    {% endfor %}
+    </div>
+{% endblock %}

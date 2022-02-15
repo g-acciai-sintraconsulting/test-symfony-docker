@@ -1,0 +1,79 @@
+
+.endpoint-block {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    grid-template-rows: auto auto;
+    flex-direction: row;
+    align-items: stretch;
+    margin-bottom: 2em;
+    border: 1px solid #ccc;
+}
+
+.endpoint-block > .block-header {
+    grid-column: 1 / 3;
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    border-bottom: 1px solid #ccc;
+}
+
+.endpoint-block > .left-column {
+    grid-column: 1 / 2;
+    border-right: 1px solid #ccc;
+}
+
+.endpoint-block > .right-column {
+    grid-column: 2 / 3;
+    border: 0;
+    display: flex;
+    justify-content: flex-end;
+    align-items: flex-end;
+    padding: 10px;
+}
+
+.endpoint-block .block-results {
+    border: 0;
+    border-top: 1px solid #ccc;
+    grid-column: 1 / 3;
+    padding: 10px;
+    display: none;
+}
+
+
+
+.block-header .method {
+    flex-grow: 0;
+    padding: 10px;
+    border-right: 1px solid #ccc;
+}
+
+.block-header .title {
+    flex-grow: 0;
+    font-weight: bold;
+    padding: 10px;
+}
+
+.block-header .endpoint {
+    flex-grow: 1;
+    padding: 10px;
+}
+
+
+
+.endpoint-block .parameters {
+    padding: 10px;
+}
+
+.endpoint-block .body {
+    padding: 10px;
+}
+
+.endpoint-block .body textarea {
+    width: 100%;
+    min-height: 100px;
+    resize: none;
+}
+
+.endpoint-block .body > div:nth-child(1) {
+
+}
