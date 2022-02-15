@@ -1,0 +1,13 @@
+version: "3.2"
+services:
+ php:
+      build:
+        context: .
+        dockerfile: Dockerfile.debug
+      ports:
+        - "88:80"
+      volumes:
+        - ./src:/var/www/html:cached
+      environment:
+        - XDEBUG_MODE=develop,debug
+        - XDEBUG_CONFIG=""idekey=${XDEBUG_IDE_KEY} remote_host=${XDEBUG_REMOTE_HOST} client_host=host.docker.internal client_port=9003 max_nesting_level=9999 log=/var/www/html/xdebug/xdebug.log"
