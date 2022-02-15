@@ -6,37 +6,51 @@
 
 {% block javascripts %}
     <script>
-        function runRequest(requestData, resultPanelSelector) {
+        function runRequest(requestAction, resultPanelSelector) {
             //alert(`${requestData.method} ${requestData.endpoint}`);
 
-            let requestUrl = requestData.endpoint;
+            try {
 
-            const requestInit = {
-                method: requestData.method
-            };
+                const requestData = requestAction();
 
-            if (requestData.method === "GET") {
-                const queryString = Object.keys(requestData.parameters).map(x => `${x}=${Reflect.get(requestData.parameters, x)}`).join("&");
-                requestUrl += `?${queryString}`;
+                let requestUrl = requestData.endpoint;
+
+                const requestInit = {
+                    method: requestData.method
+                };
+
+                if (requestData.method === "GET") {
+                    const queryString = Object.keys(requestData.parameters).map(x => `${x}=${Reflect.get(requestData.parameters, x)}`).join("&");
+                    requestUrl += `?${queryString}`;
+                }
+                else if (requestData.method === "POST") {
+                    requestInit.body = JSON.stringify(requestData.parameters);
+                }
+                else {
+                    throw new Error("method not implemented");
+                }
+
+                const request = new Request(requestUrl, requestInit);
+
+                const resultPanel =  resultPanelSelector.querySelector('.block-results');
+                resultPanel.innerHTML = "";
+                resultPanel.style.display = "block";
+
+                fetch(request)
+                    .then(response => response.text())
+                    .then(text => {
+                        resultPanel.innerText = text;
+                    })
+                    .catch(err => {
+                        resultPanel.innerText = err;
+                    });
+            } 
+            catch (error) {
+                const resultPanel =  resultPanelSelector.querySelector('.block-results');
+                resultPanel.innerHTML = "";
+                resultPanel.style.display = "block";
+                resultPanel.innerHTML = error;
             }
-            else if (requestData.method === "POST") {
-                requestInit.body = JSON.stringify(requestData.parameters);
-            }
-            else {
-                throw new Error("method not implemented");
-            }
-
-            const request = new Request(requestUrl, requestInit);
-
-            const resultPanel =  resultPanelSelector.querySelector('.block-results');
-            resultPanel.innerHTML = "";
-            resultPanel.style.display = "block";
-
-            fetch(request)
-                .then(response => response.text())
-                .then(text => {
-                    resultPanel.innerText = text;
-                });
         }
     </script>
 {% endblock %}
@@ -60,7 +74,7 @@
                         <div class="text-header">parameters</div>             
                         {% for paramName, paramInfo in funcInfo.parameters %}
                         <div>
-                            <span class="mono-text">{{paramName}}</span>&nbsp;<input name="req{{counter}}_{{paramName}}" value="{{paramInfo}}"/>
+                            <span class="mono-text">{{paramName}}</span>&nbsp;<input name="req{{counter}}_{{paramName}}" value="{{paramInfo[1]}}"/>
                         </div>
                         {% endfor %}
                     </div>
@@ -69,7 +83,7 @@
                         <div class="text-header">body</div>
                         <textarea name="req{{counter}}_body" class="mono-text">{
 {% for paramName, paramInfo in funcInfo.parameters %}
-    "{{paramName}}": {{paramInfo}},
+    "{{paramName}}": {{paramInfo[1]}},
 {% endfor %}
 }</textarea>
                     </div>
@@ -78,10 +92,14 @@
 
             <div class="right-column">
                 <script>
-                    function buildRequestData() {
+                    function buildRequestData{{counter}}() {
                         let requestParams{{counter}};
                         {% if funcInfo.method == 'GET' %}
-
+                            requestParams{{counter}} = {
+                                {% for paramName, paramInfo in funcInfo.parameters %}
+                                    {{paramName}}: '{{paramInfo[1]}}',
+                                {% endfor %}
+                            }
                         {% elseif funcInfo.method == 'POST' %}
                             requestParams{{counter}} = JSON.parse(document.querySelector("textarea[name=req{{counter}}_body]").value);
                         {% endif %}
@@ -92,10 +110,10 @@
                             parameters: requestParams{{counter}}
                         }
                     }
-                
+                    /*
                     const requestParams{{counter}} = {
                         {% for paramName, paramInfo in funcInfo.parameters %}
-                            {{paramName}}: '{{paramInfo}}',
+                            {{paramName}}: '{{paramInfo[1]}}',
                         {% endfor %}
                     };
 
@@ -104,8 +122,9 @@
                         endpoint: '{{funcInfo.endpoint}}',
                         parameters: requestParams{{counter}}
                     };
+                    */
                 </script>
-                <button onclick="runRequest(requestData{{counter}}, event.currentTarget.parentElement.parentElement)">Try It!</button>
+                <button onclick="runRequest(() => buildRequestData{{counter}}(), event.currentTarget.parentElement.parentElement)">Try It!</button>
             </div>
 
             <div class="block-results">
