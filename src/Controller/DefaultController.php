@@ -10,7 +10,7 @@ use Symfony\Component\Routing\Annotation\Route;
 
 class DefaultController extends AbstractController {
 
-    #[Route('/home')]
+    #[Route('/')]
     public function home(): Response 
     {
         $functions = [

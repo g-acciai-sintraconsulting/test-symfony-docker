@@ -56,6 +56,9 @@
 {% endblock %}
 
 {% block body %}
+<AmpContent>
+<a href="{{ path('app_login') }}" class="btn btn-info">LOGIN</a>
+</NonAmpContent>
     <div class="container">
     {% set counter = 1 %}
     {% for funcName, funcInfo in functions %}
@@ -134,4 +137,5 @@
         {% set counter = counter + 1 %}
     {% endfor %}
     </div>
+</NonAmpContent>
 {% endblock %}
